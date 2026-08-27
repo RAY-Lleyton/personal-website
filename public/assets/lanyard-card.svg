@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="1008" viewBox="0 0 640 1008">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a332a"/>
+      <stop offset="55%" stop-color="#243d38"/>
+      <stop offset="100%" stop-color="#152028"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="1008" rx="28" fill="url(#bg)"/>
+  <rect x="36" y="36" width="568" height="568" rx="18" fill="#0f1715"/>
+  <circle cx="320" cy="300" r="118" fill="#2f4a42"/>
+  <circle cx="320" cy="270" r="52" fill="#c6ebd8"/>
+  <ellipse cx="320" cy="360" rx="78" ry="52" fill="#c6ebd8"/>
+  <text x="56" y="680" fill="#f3f0ea" font-family="Georgia, 'Times New Roman', serif" font-size="48">Lleyton Elliott</text>
+  <text x="56" y="724" fill="#c6ebd8" font-family="ui-monospace, monospace" font-size="18" letter-spacing="2">ROBOTICS · MEN G · BUILDER</text>
+  <text x="56" y="790" fill="#f3f0ea" font-family="ui-sans-serif, system-ui" font-size="20">lleytonelliott@gmail.com</text>
+  <text x="56" y="830" fill="#d8d2c8" font-family="ui-sans-serif, system-ui" font-size="18">linkedin.com/in/lleyton-elliott</text>
+  <text x="56" y="900" fill="#8a9a94" font-family="ui-monospace, monospace" font-size="14" letter-spacing="3">DRAG ME · SAY HI</text>
+</svg>

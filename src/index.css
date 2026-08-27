@@ -1,0 +1,328 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Instrument Serif', 'Times New Roman', serif;
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --color-ink: #12141a;
+  --color-paper: #f3f0ea;
+  --color-mist: #d8d2c8;
+  --color-accent: #1e7d5d;
+  --color-accent-soft: #c6ebd8;
+  --color-tech: #2f5d8c;
+  --color-leadership: #8a4b2f;
+  --color-community: #5a4a8a;
+  --color-personal: #3d7552;
+  --color-assoc-mit: #8c1d1d;
+  --color-assoc-berkeley: #003262;
+  --color-assoc-ray: #118a66;
+  --color-assoc-personal: #4a5560;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    --top-panel-height: 72px;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 90% 55% at 8% -5%, #cceadc 0%, transparent 52%),
+      radial-gradient(ellipse 70% 45% at 95% 8%, #e4d5c4 0%, transparent 48%),
+      radial-gradient(ellipse 50% 40% at 50% 100%, #ddd4c8 0%, transparent 55%),
+      linear-gradient(180deg, #f8f5f0 0%, var(--color-paper) 35%, #e9e3d8 100%);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background: var(--color-accent-soft);
+    color: var(--color-ink);
+  }
+}
+
+/* Hover pop for social icons and the personal seal. Scale (not width/height)
+   so the element's box never changes and hovering can't reflow the page.
+   --pop-scale is set from SITE.socials.hoverPopScale. */
+.hover-pop {
+  transform-origin: center;
+  transition: scale 200ms ease-out;
+}
+
+.group:hover > .hover-pop,
+.group:focus-visible > .hover-pop {
+  scale: var(--pop-scale, 1.22);
+}
+
+/* Scroll cue bob. Uses `translate` rather than `transform` so it can't clobber
+   the wrapper's centring transform. Distance/duration come from SITE.scrollCue. */
+@keyframes scroll-cue-bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 var(--cue-bob, 6px);
+  }
+}
+
+.scroll-cue-bob {
+  animation: scroll-cue-bob var(--cue-bob-duration, 1900ms) ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue-bob {
+    animation: none;
+  }
+}
+
+/* Custom cursor. A flat site colour, swapped by JS from the surface underneath
+   (see SITE.cursor.colorOnDark / colorOnLight) — cheaper than a backdrop filter
+   and keeps the cursor on-palette instead of whatever an inversion produces. */
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  border-radius: 9999px;
+  pointer-events: none;
+  opacity: 0;
+  will-change: translate;
+  /* never position — transitioning that would make the cursor lag the mouse */
+  transition-property: scale, background-color;
+  transition-timing-function: ease-out;
+}
+
+.custom-cursor[data-hot='true'] {
+  scale: var(--cursor-hover-scale, 1.9);
+}
+
+html.has-custom-cursor,
+html.has-custom-cursor * {
+  cursor: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .custom-cursor {
+    transition-duration: 0ms;
+  }
+}
+
+/* ── Pinned polaroids (both A/B variants) ─────────────────────────────────── */
+
+.polaroid {
+  position: relative;
+  display: block;
+  padding: 10px 10px 0;
+  background: #fbf9f4;
+  border-radius: 2px;
+  box-shadow:
+    0 1px 1px rgba(18, 20, 26, 0.16),
+    0 14px 28px -14px rgba(18, 20, 26, 0.45);
+  text-decoration: none;
+  color: var(--color-ink);
+  /* `rotate` carries the tilt; `transform` stays free for the hero drop */
+  transition:
+    rotate 220ms ease-out,
+    translate 220ms ease-out,
+    scale 220ms ease-out,
+    box-shadow 220ms ease-out;
+}
+
+.polaroid-photo {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  background: var(--color-mist);
+}
+
+.polaroid-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.polaroid-caption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1;
+  color: rgba(18, 20, 26, 0.72);
+}
+
+.polaroid-link:hover,
+.polaroid-link:focus-visible {
+  rotate: 0deg !important;
+  translate: 0 calc(-1 * var(--polaroid-hover-lift, 8px));
+  scale: var(--polaroid-hover-scale, 1.07);
+  /* lift it above its neighbours so the growth isn't clipped by them */
+  z-index: 3;
+  box-shadow:
+    0 1px 1px rgba(18, 20, 26, 0.18),
+    0 30px 50px -16px rgba(18, 20, 26, 0.52);
+}
+
+/* Pushpin, centred on the top edge */
+.polaroid-pin {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  translate: -50% 0;
+  width: 16px;
+  height: 18px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.polaroid-pin-head {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 13px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 34% 30%, #6fd3aa, var(--color-accent) 58%, #14603f);
+  box-shadow: 0 2px 4px rgba(18, 20, 26, 0.4);
+}
+
+.polaroid-pin-shaft {
+  position: absolute;
+  top: 11px;
+  left: 50%;
+  translate: -50% 0;
+  width: 2px;
+  height: 7px;
+  background: rgba(18, 20, 26, 0.45);
+  border-radius: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .polaroid {
+    transition: none;
+  }
+}
+
+
+/* ── Scroll rail ──────────────────────────────────────────────────────────── */
+
+.scroll-rail {
+  position: relative;
+  /* One number drives every colour here: 0 = over the hero, 1 = over paper. */
+  --rail-light: var(--color-paper);
+  --rail-dark: var(--color-ink);
+  --rail-base: color-mix(
+    in srgb,
+    var(--rail-dark) calc(var(--surface, 0) * 100%),
+    var(--rail-light)
+  );
+  padding-left: 18px;
+}
+
+.scroll-rail-track {
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  width: 1px;
+  background: color-mix(in srgb, var(--rail-base) 26%, transparent);
+}
+
+/* The crawling line. Stays green on both surfaces — it's the progress, not chrome. */
+.scroll-rail-fill {
+  width: 100%;
+  background: var(--color-accent);
+  transition: height 120ms linear;
+}
+
+.scroll-rail-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+}
+
+.scroll-rail-item {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: color-mix(in srgb, var(--rail-base) 55%, transparent);
+  transition:
+    color 260ms ease-out,
+    opacity 260ms ease-out;
+}
+
+.scroll-rail-dot {
+  position: absolute;
+  left: -18px;
+  top: 0.45em;
+  width: 7px;
+  height: 7px;
+  translate: -50% -50%;
+  border-radius: 9999px;
+  background: var(--rail-base);
+  opacity: 0.32;
+  transition:
+    background-color 260ms ease-out,
+    opacity 260ms ease-out,
+    scale 260ms ease-out;
+}
+
+.scroll-rail-item.is-reached .scroll-rail-dot {
+  background: var(--color-accent);
+  opacity: 1;
+}
+
+.scroll-rail-item.is-current {
+  color: var(--rail-base);
+}
+
+.scroll-rail-item.is-current .scroll-rail-dot {
+  background: var(--color-accent);
+  opacity: 1;
+  scale: 1.7;
+}
+
+.scroll-rail-item:hover,
+.scroll-rail-item:focus-visible {
+  color: var(--rail-base);
+}
+
+.scroll-rail-index {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  opacity: 0.7;
+}
+
+.scroll-rail-label {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-rail-fill,
+  .scroll-rail-dot,
+  .scroll-rail-item {
+    transition: none;
+  }
+}
