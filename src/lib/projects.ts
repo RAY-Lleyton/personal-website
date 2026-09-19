@@ -8,6 +8,8 @@ export type Project = {
   dateStart: string
   dateEnd: string
   imageUrl: string
+  /** Detail-view photo gallery. Pipe-separated paths in the CSV; empty = placeholders. */
+  gallery: string[]
   modelUrl: string
   featured: boolean
   links: { label: string; url: string }[]
@@ -98,6 +100,7 @@ export function mapProjectRow(row: Record<string, string>): Project {
     dateStart: row.date_start,
     dateEnd: row.date_end,
     imageUrl: row.image_url,
+    gallery: splitList(row.gallery),
     modelUrl: row.model_url,
     featured: row.featured?.toLowerCase() === 'true',
     links: parseLinks(row.links),

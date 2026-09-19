@@ -140,3 +140,15 @@ function roundRect(
   ctx.arcTo(x, y, x + w, y, radius)
   ctx.closePath()
 }
+
+/** Copy for the ProfileCard badge overlay. */
+export const PROFILE = {
+  name: 'Lleyton Elliott',
+  title: 'Co-Founder & CTO, RAY Robotics',
+  handle: 'lleyton',
+  status: 'Berkeley, CA',
+  contactText: 'Email me',
+  // Real headshot on the badge. (Not lanyard-card.png — that older image had
+  // the name printed on it, which double-printed the name on the card.)
+  avatarUrl: '/assets/lleyton-photo.webp',
+}

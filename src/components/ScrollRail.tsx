@@ -1,4 +1,5 @@
 import { useScrollRail } from '@/hooks/useScrollRail'
+import { SITE } from '@/lib/site-config'
 import type { SectionDef } from '@/lib/taxonomy'
 import { cn } from '@/lib/utils'
 
@@ -31,7 +32,11 @@ export function ScrollRail({ sections, activeIndex, onSelect, progress }: Scroll
     <nav
       aria-label="Sections"
       className="scroll-rail"
-      style={{ ['--surface' as string]: surface }}
+      style={{
+        ['--surface' as string]: surface,
+        ['--rail-gap' as string]: `${SITE.nav.railGap}px`,
+        ['--rail-hover-scale' as string]: SITE.nav.railHoverScale,
+      }}
     >
       <div className="scroll-rail-track" aria-hidden>
         <div className="scroll-rail-fill" style={{ height: `${fill * 100}%` }} />
@@ -55,9 +60,6 @@ export function ScrollRail({ sections, activeIndex, onSelect, progress }: Scroll
                 )}
               >
                 <span className="scroll-rail-dot" aria-hidden />
-                <span className="scroll-rail-index" aria-hidden>
-                  {String(i + 1).padStart(2, '0')}
-                </span>
                 <span className="scroll-rail-label">{section.navLabel}</span>
               </button>
             </li>

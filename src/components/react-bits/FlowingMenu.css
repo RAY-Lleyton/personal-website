@@ -1,0 +1,201 @@
+/*
+ * React Bits — Flowing Menu. https://reactbits.dev/components/flowing-menu
+ *
+ * Class names are prefixed (`flowing-menu__*` rather than upstream's `.menu` /
+ * `.marquee`) because this stylesheet is global and those names are too generic
+ * to hand over. Sizes come from --fm-* so SITE.flowMenu can drive them.
+ */
+
+.flowing-menu {
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--fm-radius, 18px);
+}
+
+.flowing-menu__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+}
+
+.flowing-menu__item {
+  /* The wipe's and the drop's timing live here so reduced-motion can zero them
+     out — the component only names the variables. */
+  --fm-wipe: 600ms;
+  --fm-drop: 420ms;
+  --fm-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  border-top: 1px solid;
+}
+
+.flowing-menu__item:first-child {
+  border-top: none;
+}
+
+/*
+ * The clickable bar. The wipe is clipped to *this*, not to the whole item —
+ * the marquee is absolutely positioned to fill its containing block, so if the
+ * item were the container it would cover an open panel too.
+ */
+.flowing-menu__bar {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  /* Collapsed, the rows are sized to divide the lane exactly; --fm-row-min is
+     the floor for short viewports and long category lists. */
+  height: max(var(--fm-row-height, 120px), var(--fm-row-min, 56px));
+}
+
+.flowing-menu__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7em;
+  width: 100%;
+  height: 100%;
+  /* Deliberately no z-index: the marquee is later in the DOM and must paint
+     over the resting label, or the two texts show through each other. It's
+     pointer-events: none, so the button underneath stays clickable. */
+  position: relative;
+  background: none;
+  border: 0;
+  padding: 0 1.5rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-size: var(--fm-font-size, 1.9rem);
+}
+
+.flowing-menu__meta {
+  font-family: var(--font-mono);
+  font-size: 0.42em;
+  letter-spacing: 0.18em;
+  opacity: 0.55;
+}
+
+.flowing-menu__chevron {
+  font-size: 0.62em;
+  line-height: 1;
+  opacity: 0.6;
+  transition:
+    rotate var(--fm-drop, 420ms) var(--fm-ease),
+    opacity 200ms ease-out;
+}
+
+.flowing-menu__item.is-open .flowing-menu__chevron {
+  rotate: 180deg;
+  opacity: 0.9;
+}
+
+/* The open row keeps a sliver of its own colour, so which panel belongs to
+   which row survives scrolling past the bar. */
+.flowing-menu__item.is-open .flowing-menu__bar::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  background: var(--fm-row-color, var(--color-accent));
+}
+
+/*
+ * The drop-down. Animating `grid-template-rows` from 0fr to 1fr is what lets
+ * the panel keep an `auto` height — no measuring, and it stays correct when the
+ * content rewraps.
+ */
+.flowing-menu__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  background: color-mix(in srgb, var(--color-paper) 7%, var(--color-ink));
+  text-align: left;
+  transition: grid-template-rows var(--fm-drop, 420ms) var(--fm-ease);
+}
+
+.flowing-menu__item.is-open .flowing-menu__panel {
+  grid-template-rows: 1fr;
+}
+
+.flowing-menu__panel-inner {
+  overflow: hidden;
+}
+
+/* Parked just off the bottom edge until a pointer enters. */
+.flowing-menu__marquee {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  will-change: transform;
+  transform: translate3d(0, 101%, 0);
+}
+
+.flowing-menu__marquee-clip {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Counter-moves against the panel on the wipe; carries no x of its own. */
+.flowing-menu__marquee-inner {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* The x scroll lives on its own element so it can't collide with the wipe's y. */
+.flowing-menu__track {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  width: fit-content;
+  will-change: transform;
+  animation: flowing-menu-scroll var(--fm-speed, 18s) linear infinite;
+}
+
+/* One --fm-reps'th of the track is exactly one part, so the loop is seamless. */
+@keyframes flowing-menu-scroll {
+  to {
+    transform: translateX(calc(-100% / var(--fm-reps, 4)));
+  }
+}
+
+.flowing-menu__part {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  /* Full height, not content height: the thumbnail's height is a percentage,
+     and a percentage against an auto-height parent resolves to nothing. */
+  height: 100%;
+}
+
+.flowing-menu__part span {
+  white-space: nowrap;
+  text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--fm-font-size, 1.9rem);
+  line-height: 1;
+  padding: 0 1vw;
+}
+
+.flowing-menu__img {
+  width: var(--fm-img-width, 150px);
+  height: var(--fm-img-height, 60%);
+  margin: 0 2vw;
+  border-radius: 999px;
+  background-size: cover;
+  background-position: 50% 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flowing-menu__track {
+    animation: none;
+  }
+
+  .flowing-menu__item {
+    --fm-wipe: 0ms;
+    --fm-drop: 0ms;
+  }
+}

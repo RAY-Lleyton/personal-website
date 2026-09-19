@@ -104,15 +104,49 @@ export const SITE = {
   lanyard: {
     mode: '3d' as LanyardMode,
     /** Linear: 2x this value is a 2x bigger lanyard. */
-    scale: 2.4,
+    scale: 2.5,
     /** 320–900. Drives the strap's rest length. */
-    landingHeight: 640,
+    landingHeight: 400,
     /** Inset from the viewport's right edge to the lanyard column. */
-    x: 48,
+    x: 96,
     /** Column width — needs room for the badge plus swing. */
     columnWidth: 'min(92vw, 520px)',
     /** Width of the strap slot cut into the panel's bottom edge. */
     mountWidth: 26,
+    /**
+     * What hangs off the strap.
+     *  'glb'     — the original badge mesh with its painted texture.
+     *  'profile' — React Bits ProfileCard overlaid on the badge face, so it
+     *              still swings and settles with the rope physics.
+     */
+    badge: 'profile' as 'glb' | 'profile',
+    /**
+     * Pixel width the ProfileCard is authored at. This is resolution, not size:
+     * the overlay is scaled to the badge's width either way, so raising it just
+     * renders the card crisper.
+     */
+    profileCardWidth: 300,
+    /**
+     * Size of the overlay relative to the badge face. 1 = exactly the badge's
+     * width. This is the one number to nudge if the card sits proud of, or
+     * inside, the badge outline.
+     */
+    profileFit: 1,
+    /** Fine alignment of the overlay against the badge face, world units. */
+    profileOffsetY: 0,
+    /**
+     * Strength of the holographic sheen, 0..1. Upstream effectively runs this
+     * at 1 on hover, which is unreadable at badge size.
+     */
+    profileGlare: 0.3,
+    /**
+     * Avatar box, as a % of card width / % of card height for its centre.
+     * Upstream sizes the avatar at 100% width anchored to the bottom edge —
+     * right for a person cut-out that bleeds off the card, wrong for a mark,
+     * which just overflowed and collided with the info bar.
+     */
+    profileAvatarSize: 54,
+    profileAvatarTop: 50,
   },
 
   about: {
@@ -128,23 +162,77 @@ export const SITE = {
     rightColWidth: 240,
     /** How far each stacked card peeks out below the one above it. */
     stackPeek: 20,
-    /** Sticky offset for the filter row and the card stack. */
-    topPadding: 96,
     tagFontSize: 13,
     tagPaddingX: 14,
     tagPaddingY: 10,
     /** Gap between the two filter dropdowns. */
     filterGap: 12,
+    /** Width of each dropdown. They wrap rather than stretch, so this is the
+     *  real width, not a minimum — it's what lines them up under the toggle. */
+    filterWidth: 218,
     /** Space under the filter row — lower pulls the cards up toward it. */
-    filterPadBottom: 8,
+    filterPadBottom: 10,
     /**
-     * Gap between the top panel and the stuck filter row. The sticky offset is
-     * derived from panel.height, not hardcoded — parking it any higher tucks
+     * Gap between the top panel and the stuck controls block. The sticky offset
+     * is derived from panel.height, not hardcoded — parking it any higher tucks
      * the filters behind the fixed bar, where they can't be clicked.
      */
     filterStickyGap: 8,
+    /** Space between the toggle and the dropdowns under it. */
+    toggleGap: 10,
+    /**
+     * Gap between the stuck controls block and the top of the card lane.
+     *
+     * The lane's own height is *derived*: it's the viewport minus everything
+     * stuck above it (bar + controls + this gap), which is what keeps the
+     * toggle, the dropdowns and the card on screen together. The controls
+     * block is measured at runtime, so changing its contents can't desync the
+     * lane — `controlsHeight` below is only the pre-measurement guess.
+     */
+    laneGap: 12,
+    /** Breathing room inside the card lane, top and bottom. */
+    lanePadY: 20,
+    /** First-paint estimate for the controls block, replaced once measured. */
+    controlsHeight: 120,
     /** Lead-in above the first card, in vh. */
     laneLeadIn: 1,
+  },
+
+  /**
+   * "Categories" view: React Bits' Flowing Menu, one row per category.
+   * Each row's marquee takes that category's own colour.
+   */
+  flowMenu: {
+    /** Seconds for one marquee cycle. Lower = faster. */
+    speed: 18,
+    /**
+     * Row label size. Clamped rather than fixed: "other tech projects" at a
+     * flat 1.9rem is wider than a phone-width row, and the menu clips overflow
+     * rather than scrolling it.
+     */
+    fontSize: 'clamp(0.95rem, 3.4vw, 1.9rem)',
+    /** Floor on row height so the menu stays usable on short viewports. */
+    rowMinHeight: 56,
+    /** Thumbnail strip in the marquee. Height is a % of the row. */
+    imgWidth: 'clamp(78px, 11vw, 150px)',
+    imgHeight: '58%',
+    radius: 18,
+    bg: 'var(--color-ink)',
+    text: 'var(--color-paper)',
+    /** Sits on the category colour, so it wants to be light. */
+    marqueeText: 'var(--color-paper)',
+    border: 'rgba(243, 240, 234, 0.16)',
+  },
+
+  /** iOS-style switch over the filters: "all projects" ⇄ "categories". */
+  viewToggle: {
+    width: 46,
+    height: 26,
+    knob: 20,
+    /** Inset of the knob from the track. */
+    pad: 3,
+    /** Space between the track and each caption. */
+    captionGap: 10,
   },
 
   /**
@@ -180,10 +268,9 @@ export const SITE = {
   nav: {
     /** Left inset of the vertical section nav. */
     left: 16,
-    /**
-     * 'rail'  — progress line that crawls as you scroll, with checkpoints.
-     * 'lines' — the original tick-mark sidebar.
-     */
-    style: 'rail' as 'rail' | 'lines',
+    /** Space between checkpoints. Drives the rail's overall height. */
+    railGap: 90,
+    /** How much a label grows under the pointer. Hover only — never the active item. */
+    railHoverScale: 1.2,
   },
 } as const

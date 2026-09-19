@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
-import LineSidebar from '@/components/react-bits/LineSidebar'
+import { useEffect, useRef, useState } from 'react'
 import { ScrollRail } from '@/components/ScrollRail'
+import { CategoryFlowMenu } from '@/components/CategoryFlowMenu'
 import { AboutExperiencePanel } from '@/components/AboutExperiencePanel'
 import { AboutReader } from '@/components/AboutReader'
 import { CustomCursor } from '@/components/CustomCursor'
@@ -8,11 +8,11 @@ import { FancySelect } from '@/components/FancySelect'
 import { MorphingHero } from '@/components/MorphingHero'
 import { SiteTopBar } from '@/components/SiteTopBar'
 import { ProjectCardStack } from '@/components/ProjectCardStack'
+import { ProjectDetail } from '@/components/ProjectDetail'
 import { ScrollCue } from '@/components/ScrollCue'
-import { PersonalBoard } from '@/components/PersonalBoard'
+import { ToggleSwitch } from '@/components/ToggleSwitch'
 import { useHeroMorph } from '@/hooks/useHeroMorph'
 import { ABOUT_BIO, ABOUT_HEADLINE, ABOUT_STATEMENT } from '@/lib/about'
-import { GREEN } from '@/lib/colors'
 import { SITE } from '@/lib/site-config'
 import {
   ASSOCIATION_COLORS,
@@ -20,11 +20,11 @@ import {
   categoryColor,
   categoryLabel,
   FEED_SECTION,
-  NAV_ITEMS,
-  PERSONAL_SECTION,
+  NON_TECH_SECTION,
   SECTIONS,
   projectMatchesCategory,
   SECTION_IDS,
+  sortAssociations,
 } from '@/lib/taxonomy'
 import { loadProjects, type Project } from '@/lib/projects'
 import { cn } from '@/lib/utils'
@@ -79,17 +79,78 @@ function useStableFlag(value: boolean, enterDelay = 220, leaveDelay = 520) {
 
 function ProjectFeed({ projects }: { projects: Project[] }) {
   const [activeId, setActiveId] = useState<string | null>(projects[0]?.id ?? null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
   const [associationFilter, setAssociationFilter] = useState<string | null>(null)
+  /** false = the card stack, true = the flowing category menu. */
+  const [byCategory, setByCategory] = useState(false)
 
-  const categoryOpts = availableCategoryOptions(projects.flatMap((p) => p.category))
-  const associations = [...new Set(projects.flatMap((p) => p.association))]
+  const rootRef = useRef<HTMLDivElement>(null)
+  const controlsRef = useRef<HTMLDivElement>(null)
+  const mountedRef = useRef(false)
 
-  const filtered = projects.filter((p) => {
-    if (categoryFilter && !projectMatchesCategory(p.category, categoryFilter)) return false
-    if (associationFilter && !p.association.includes(associationFilter)) return false
-    return true
-  })
+  /**
+   * The controls block is sticky, so the lane below it has to know how tall it
+   * is — that's the whole trick to keeping the toggle, the dropdowns and a card
+   * on screen at once. Measured rather than hardcoded so the two can't drift
+   * apart when the controls wrap to a column on a narrow viewport.
+   */
+  const [controlsHeight, setControlsHeight] = useState<number>(SITE.projects.controlsHeight)
+
+  useEffect(() => {
+    const el = controlsRef.current
+    if (!el) return
+    // offsetHeight, not contentRect: the block's own padding counts as space the
+    // lane can't have.
+    const measure = () => setControlsHeight(el.offsetHeight)
+    // The observer catches the real trigger — the filter row rewrapping to a
+    // column below `sm`. The resize listener is the cheap backstop for the same
+    // event, since observer delivery is tied to the frame loop.
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    window.addEventListener('resize', measure)
+    measure()
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [])
+
+  const stickyTop = SITE.panel.height + SITE.projects.filterStickyGap
+  const laneTop = stickyTop + controlsHeight + SITE.projects.laneGap
+
+  /**
+   * Swapping views changes the page height by thousands of px — the card stack
+   * is a tall scroll lane, the menu is one screen. Left alone you end up
+   * somewhere past the section entirely, so re-park the feed at the top, which
+   * is also where you want to be after picking a category.
+   *
+   * 'instant', not 'auto': `auto` defers to `html { scroll-behavior: smooth }`,
+   * and a smooth scroll into a layout that just changed height is a lurch.
+   * Skipped on mount — this fires on *changing* view, not on arriving.
+   */
+  useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true
+      return
+    }
+    const el = rootRef.current
+    if (!el) return
+    const top = window.scrollY + el.getBoundingClientRect().top - stickyTop
+    window.scrollTo({ top: Math.max(0, top), behavior: 'instant' })
+  }, [byCategory, stickyTop])
+
+  // Association narrows first: the category options (and their counts in the
+  // menu) then describe what you can actually still reach.
+  const byAssociation = projects.filter(
+    (p) => !associationFilter || p.association.includes(associationFilter),
+  )
+  const categoryOpts = availableCategoryOptions(byAssociation.flatMap((p) => p.category))
+  const associations = sortAssociations([...new Set(projects.flatMap((p) => p.association))])
+
+  const filtered = byAssociation.filter(
+    (p) => !categoryFilter || projectMatchesCategory(p.category, categoryFilter),
+  )
 
   const active = filtered.find((p) => p.id === activeId) ?? filtered[0]
 
@@ -100,53 +161,85 @@ function ProjectFeed({ projects }: { projects: Project[] }) {
   }, [filtered, activeId])
 
   return (
-    <div>
-      {/* Filters sit tight against the stack — the card lane adds its own lead-in. */}
+    <div ref={rootRef}>
+      {/* Toggle over the dropdowns, both stuck under the top bar. */}
       <div
-        className="sticky z-20 flex flex-col border-b border-ink/10 bg-paper pt-0 sm:flex-row"
+        ref={controlsRef}
+        className="sticky z-20 border-b border-ink/10 bg-paper"
         style={{
-          gap: SITE.projects.filterGap,
+          top: stickyTop,
           paddingBottom: SITE.projects.filterPadBottom,
-          top: SITE.panel.height + SITE.projects.filterStickyGap,
         }}
       >
-        <FancySelect
-          label="Category"
-          value={categoryFilter}
-          onChange={setCategoryFilter}
-          compact
-          options={[
-            { value: null, label: 'All', color: 'var(--color-ink)' },
-            ...categoryOpts.map((opt) => ({
-              value: opt.value,
-              label: opt.label,
-              color: opt.color,
-            })),
-          ]}
+        <ToggleSwitch
+          value={byCategory}
+          onChange={setByCategory}
+          offLabel="all projects"
+          onLabel="categories"
+          label="Project view"
         />
-        <FancySelect
-          label="Association"
-          value={associationFilter}
-          onChange={setAssociationFilter}
-          compact
-          options={[
-            { value: null, label: 'All', color: 'var(--color-ink)' },
-            ...associations.map((assoc) => ({
-              value: assoc,
-              label: assoc,
-              color: ASSOCIATION_COLORS[assoc],
-            })),
-          ]}
-        />
+
+        {/* Fixed widths, wrapping — not `flex-1`. Stretched to the full section
+            the two dropdowns read as a banner; at their own width they line up
+            under the toggle's left edge. */}
+        <div
+          className="flex flex-wrap"
+          style={{ gap: SITE.projects.filterGap, marginTop: SITE.projects.toggleGap }}
+        >
+          <div className="max-w-full" style={{ width: SITE.projects.filterWidth }}>
+            <FancySelect
+              label="Category"
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+              compact
+              options={[
+                { value: null, label: 'All', color: 'var(--color-ink)' },
+                ...categoryOpts.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                  color: opt.color,
+                })),
+              ]}
+            />
+          </div>
+          <div className="max-w-full" style={{ width: SITE.projects.filterWidth }}>
+            <FancySelect
+              label="Association"
+              value={associationFilter}
+              onChange={setAssociationFilter}
+              compact
+              options={[
+                { value: null, label: 'All', color: 'var(--color-ink)' },
+                ...associations.map((assoc) => ({
+                  value: assoc,
+                  label: assoc,
+                  color: ASSOCIATION_COLORS[assoc],
+                })),
+              ]}
+            />
+          </div>
+        </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {byCategory ? (
+        <CategoryFlowMenu
+          projects={byAssociation}
+          options={categoryOpts}
+          laneTop={laneTop}
+          // The open row *is* the category filter, so the dropdown and the menu
+          // can't disagree, and flipping back to the cards keeps your place.
+          expanded={categoryFilter}
+          onToggle={setCategoryFilter}
+        />
+      ) : filtered.length === 0 ? (
         <p className="py-20 text-center font-mono text-sm text-ink/45">No projects match.</p>
       ) : (
         <ProjectCardStack
           projects={filtered}
+          laneTop={laneTop}
           activeId={active?.id ?? null}
           onSelect={setActiveId}
+          onExpand={setExpandedId}
           categoryLabel={categoryLabel}
           categoryColor={categoryColor}
           associationColors={ASSOCIATION_COLORS}
@@ -157,12 +250,31 @@ function ProjectFeed({ projects }: { projects: Project[] }) {
         />
       )}
 
-      {active && (
-        <div className="rounded-2xl border border-ink/10 bg-paper p-5 lg:hidden">
+      {!byCategory && active && (
+        <button
+          type="button"
+          onClick={() => setExpandedId(active.id)}
+          className="block w-full rounded-2xl border border-ink/10 bg-paper p-5 text-left lg:hidden"
+        >
           <p className="font-display text-2xl">{active.title}</p>
           <p className="mt-2 text-sm leading-relaxed text-ink/65">{active.summary}</p>
-        </div>
+          <span className="mt-4 inline-block font-mono text-[11px] tracking-[0.18em] text-accent uppercase">
+            View more →
+          </span>
+        </button>
       )}
+
+      <ProjectDetail
+        project={projects.find((p) => p.id === expandedId) ?? null}
+        onClose={() => setExpandedId(null)}
+        categoryLabel={categoryLabel}
+        categoryColor={categoryColor}
+        associationColors={ASSOCIATION_COLORS}
+        tagStyle={{
+          fontSize: SITE.projects.tagFontSize,
+          padding: `${SITE.projects.tagPaddingY}px ${SITE.projects.tagPaddingX}px`,
+        }}
+      />
     </div>
   )
 }
@@ -173,7 +285,6 @@ export default function App() {
   const aboutInView = useStableFlag(activeSection === 1)
   const readerMode = SITE.about.experience === 'reader'
   const [readerReset, setReaderReset] = useState(0)
-  const onHero = activeSection === 0
   const [projects, setProjects] = useState<Project[]>([])
   const [error, setError] = useState<string | null>(null)
 
@@ -186,18 +297,6 @@ export default function App() {
       .then(setProjects)
       .catch((err: Error) => setError(err.message))
   }, [])
-
-  const navColors = onHero && heroMorph < 0.15
-    ? {
-        accentColor: '#e8f5ef',
-        textColor: 'rgba(255,255,255,0.72)',
-        markerColor: 'rgba(255,255,255,0.45)',
-      }
-    : {
-        accentColor: GREEN.accent,
-        textColor: '#5c564f',
-        markerColor: '#a39b90',
-      }
 
   return (
     <div className="relative">
@@ -215,28 +314,12 @@ export default function App() {
         style={{ left: SITE.nav.left }}
       >
         <div className="pointer-events-auto">
-          {SITE.nav.style === 'rail' ? (
-            <ScrollRail
-              sections={SECTIONS}
-              activeIndex={activeSection}
-              onSelect={scrollToSection}
-              progress={heroMorph}
-            />
-          ) : (
-            <LineSidebar
-              items={NAV_ITEMS}
-              accentColor={navColors.accentColor}
-              textColor={navColors.textColor}
-              markerColor={navColors.markerColor}
-              showIndex
-              defaultActive={activeSection}
-              onItemClick={(index) => scrollToSection(index)}
-              fontSize={0.95}
-              itemGap={16}
-              markerLength={44}
-              maxShift={18}
-            />
-          )}
+          <ScrollRail
+            sections={SECTIONS}
+            activeIndex={activeSection}
+            onSelect={scrollToSection}
+            progress={heroMorph}
+          />
         </div>
       </aside>
 
@@ -304,18 +387,21 @@ export default function App() {
         </section>
 
         <section
-            id={PERSONAL_SECTION.id}
+            id={NON_TECH_SECTION.id}
             className="mx-auto max-w-7xl px-6 py-20 lg:px-12 lg:pl-36"
           >
             <p className="font-mono text-[11px] tracking-[0.22em] text-ink/45 uppercase">
-              {PERSONAL_SECTION.eyebrow}
+              {NON_TECH_SECTION.eyebrow}
             </p>
             <h2 className="mt-2 font-display text-4xl text-ink md:text-5xl">Off the clock</h2>
-            <p className="mt-2 max-w-xl text-sm text-ink/60">
-              Music, writing, and everything that isn&apos;t robotics. Pinned, and clickable.
-            </p>
-            <div className="mt-6">
-              <PersonalBoard />
+            <div className="mt-8 flex min-h-[30vh] items-center justify-center rounded-3xl border border-dashed border-ink/15 bg-ink/[0.02] px-6 py-16 text-center">
+              <div>
+                <p className="font-display text-3xl text-ink/80 md:text-4xl">Coming soon</p>
+                <p className="mt-3 max-w-md font-mono text-xs leading-relaxed tracking-[0.04em] text-ink/45">
+                  Music, writing, rowing, the outdoors, and everything that isn&apos;t robotics —
+                  on its way.
+                </p>
+              </div>
             </div>
         </section>
 

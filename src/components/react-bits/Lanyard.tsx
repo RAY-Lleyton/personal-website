@@ -18,7 +18,9 @@ import * as THREE from 'three'
 import cardGLB from './card.glb'
 import lanyard from './lanyard.png'
 import './Lanyard.css'
-import { EMAIL, LINKEDIN_URL } from '@/lib/badge'
+import { EMAIL, LINKEDIN_URL, PROFILE } from '@/lib/badge'
+import ProfileCard from '@/components/react-bits/ProfileCard'
+import { SITE } from '@/lib/site-config'
 
 extend({ MeshLineGeometry, MeshLineMaterial })
 
@@ -52,6 +54,14 @@ function cameraDistance(rope: number) {
  * Everything here scales together — collider, art, and the hook — so the strap
  * always terminates on the metal clip rather than somewhere inside the card.
  */
+/**
+ * drei's <Html transform> maps DOM pixels into world units at
+ * `(distanceFactor ?? 10) / 400` per pixel — see getObjectCSSMatrix in
+ * @react-three/drei/web/Html.js, which multiplies the matrix basis by that
+ * amount. Sizing the overlay without it renders the card exactly 40x too small.
+ */
+const HTML_UNITS_PER_PX = 10 / 400
+
 const CARD_BASE = {
   visualScale: 2.25,
   visualOffsetY: -1.2,
@@ -351,6 +361,7 @@ function Band({
 
   const visualScale = CARD_BASE.visualScale * cardScale
   const hookY = CARD_BASE.hookY * cardScale
+  const useProfileBadge = SITE.lanyard.badge === 'profile'
   const anchorY = anchorYForCamera(camZ, lookY)
 
   const linkHit = (href: string, external: boolean | undefined, y: number, label: string) => (
@@ -394,16 +405,20 @@ function Band({
             scale={visualScale}
             position={[0, CARD_BASE.visualOffsetY * cardScale, CARD_BASE.visualOffsetZ]}
           >
-            <mesh geometry={nodes.card.geometry} raycast={() => null}>
-              <meshPhysicalMaterial
-                map={cardMap}
-                map-anisotropy={16}
-                clearcoat={isMobile ? 0 : 1}
-                clearcoatRoughness={0.15}
-                roughness={0.9}
-                metalness={0.8}
-              />
-            </mesh>
+            {/* The painted badge face. Hidden under the ProfileCard overlay,
+                which occupies the same 0.71 aspect the mesh does. */}
+            {!useProfileBadge && (
+              <mesh geometry={nodes.card.geometry} raycast={() => null}>
+                <meshPhysicalMaterial
+                  map={cardMap}
+                  map-anisotropy={16}
+                  clearcoat={isMobile ? 0 : 1}
+                  clearcoatRoughness={0.15}
+                  roughness={0.9}
+                  metalness={0.8}
+                />
+              </mesh>
+            )}
             <mesh
               geometry={nodes.clip.geometry}
               material={materials.metal}
@@ -411,9 +426,54 @@ function Band({
               raycast={() => null}
             />
             <mesh geometry={nodes.clamp.geometry} material={materials.metal} raycast={() => null} />
-            {linkHit(`mailto:${EMAIL}`, false, -0.52, EMAIL)}
-            {linkHit(LINKEDIN_URL, true, -0.66, 'LinkedIn')}
+            {!useProfileBadge && linkHit(`mailto:${EMAIL}`, false, -0.52, EMAIL)}
+            {!useProfileBadge && linkHit(LINKEDIN_URL, true, -0.66, 'LinkedIn')}
           </group>
+
+          {/*
+            Mounted on the RigidBody rather than inside the scaled visual group,
+            so its size is expressed directly in card units — the collider is
+            the card, so matching its half-extents is exact. `transform` keeps
+            it a real DOM node carried by the 3D matrix, which is what lets the
+            holographic effects survive the swing.
+          */}
+          {useProfileBadge && (
+            <Html
+              transform
+              occlude={false}
+              position={[0, SITE.lanyard.profileOffsetY, 0.02]}
+              scale={
+                (CARD_BASE.halfW * 2 * cardScale * SITE.lanyard.profileFit) /
+                (SITE.lanyard.profileCardWidth * HTML_UNITS_PER_PX)
+              }
+              style={{ pointerEvents: 'auto' }}
+              zIndexRange={[20, 0]}
+            >
+              <div
+                style={{
+                  width: SITE.lanyard.profileCardWidth,
+                  ['--lanyard-glare' as string]: SITE.lanyard.profileGlare,
+                  ['--lanyard-avatar-size' as string]: `${SITE.lanyard.profileAvatarSize}%`,
+                  ['--lanyard-avatar-top' as string]: `${SITE.lanyard.profileAvatarTop}%`,
+                }}
+              >
+                <ProfileCard
+                  className="pc-on-lanyard"
+                  // the badge already tilts with the physics; a second
+                  // pointer-driven tilt on top of it fights the swing
+                  enableTilt={false}
+                  behindGlowEnabled={false}
+                  name={PROFILE.name}
+                  title={PROFILE.title}
+                  handle={PROFILE.handle}
+                  status={PROFILE.status}
+                  contactText={PROFILE.contactText}
+                  avatarUrl={PROFILE.avatarUrl}
+                  onContactClick={() => window.open(`mailto:${EMAIL}`, '_self')}
+                />
+              </div>
+            </Html>
+          )}
         </RigidBody>
       </group>
       <mesh ref={band} raycast={() => null}>

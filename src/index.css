@@ -10,13 +10,15 @@
   --color-mist: #d8d2c8;
   --color-accent: #1e7d5d;
   --color-accent-soft: #c6ebd8;
-  --color-tech: #2f5d8c;
+  --color-robotics: #2f5d8c;
+  --color-tech: #12707a;
   --color-leadership: #8a4b2f;
   --color-community: #5a4a8a;
   --color-personal: #3d7552;
   --color-assoc-mit: #8c1d1d;
   --color-assoc-berkeley: #003262;
   --color-assoc-ray: #118a66;
+  --color-assoc-nova: #5a3fbf;
   --color-assoc-personal: #4a5560;
 }
 
@@ -251,7 +253,7 @@ html.has-custom-cursor * {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 34px;
+  gap: var(--rail-gap, 90px);
 }
 
 .scroll-rail-item {
@@ -279,6 +281,7 @@ html.has-custom-cursor * {
   border-radius: 9999px;
   background: var(--rail-base);
   opacity: 0.32;
+  scale: var(--dot-scale, 1);
   transition:
     background-color 260ms ease-out,
     opacity 260ms ease-out,
@@ -297,7 +300,9 @@ html.has-custom-cursor * {
 .scroll-rail-item.is-current .scroll-rail-dot {
   background: var(--color-accent);
   opacity: 1;
-  scale: 1.7;
+  /* sets the variable, not `scale`, so hover can compound with it instead of
+     overwriting it — hovering the active dot grows it from 1.7, not from 1 */
+  --dot-scale: 1.7;
 }
 
 .scroll-rail-item:hover,
@@ -305,24 +310,37 @@ html.has-custom-cursor * {
   color: var(--rail-base);
 }
 
-.scroll-rail-index {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  opacity: 0.7;
+.scroll-rail-item:hover .scroll-rail-dot,
+.scroll-rail-item:focus-visible .scroll-rail-dot {
+  scale: calc(var(--dot-scale, 1) * var(--rail-hover-scale, 1.2));
 }
 
 .scroll-rail-label {
+  display: inline-block;
   font-family: var(--font-sans);
   font-size: 0.95rem;
   line-height: 1.2;
   white-space: nowrap;
+  /* grows from the rail outward, so the dot stays put */
+  transform-origin: left center;
+  transition: scale 200ms ease-out;
+}
+
+/*
+ * Hover only — deliberately not tied to .is-current. The active section is
+ * signalled by colour and its larger dot; inflating it too would leave the
+ * label permanently enlarged with nothing to compare against.
+ */
+.scroll-rail-item:hover .scroll-rail-label,
+.scroll-rail-item:focus-visible .scroll-rail-label {
+  scale: var(--rail-hover-scale, 1.14);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-rail-fill,
   .scroll-rail-dot,
-  .scroll-rail-item {
+  .scroll-rail-item,
+  .scroll-rail-label {
     transition: none;
   }
 }

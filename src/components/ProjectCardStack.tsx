@@ -9,12 +9,21 @@ const FADE_AFTER_DEPTH = 2
 
 type ProjectCardStackProps = {
   projects: Project[]
+  /** Top of the lane: everything stuck above it (bar + controls + gap). */
+  laneTop: number
   activeId: string | null
   onSelect: (id: string) => void
+  onExpand: (id: string) => void
   categoryLabel: (value: string) => string
   categoryColor: (value: string) => string
   associationColors: Record<string, string>
   tagStyle: CSSProperties
+}
+
+/** '3/2' → 1.5. Used to cap card width by the height the lane can spare. */
+function aspectRatio(aspect: string): number {
+  const [w, h] = aspect.split('/').map(Number)
+  return h ? w / h : 1.5
 }
 
 /**
@@ -24,8 +33,10 @@ type ProjectCardStackProps = {
  */
 export function ProjectCardStack({
   projects,
+  laneTop,
   activeId,
   onSelect,
+  onExpand,
   categoryLabel,
   categoryColor,
   associationColors,
@@ -55,8 +66,14 @@ export function ProjectCardStack({
   }
 
   const total = projects.length
-  // Center cards in the viewport under sticky filters
-  const stickyTop = Math.max(56, SITE.projects.topPadding)
+  // The lane is whatever the viewport has left under the stuck controls, so the
+  // card is centred in *visible* space rather than pushed below the fold.
+  const laneHeight = `calc(100svh - ${laneTop}px)`
+  // Cap the card by that height too: at 3/2 a 620px card is 413px tall, which a
+  // short viewport can't spare once the bar and controls have taken their cut.
+  const cardMaxWidth = `min(${SITE.projects.cardMaxWidth}px, calc((100svh - ${
+    laneTop + SITE.projects.lanePadY * 2
+  }px) * ${aspectRatio(SITE.projects.cardAspect)}))`
 
   return (
     <div
@@ -86,8 +103,10 @@ export function ProjectCardStack({
             peek={SITE.projects.stackPeek}
             isActive={project.id === activeId}
             onSelect={onSelect}
-            stickyTop={stickyTop}
-            cardMaxWidth={SITE.projects.cardMaxWidth}
+            onExpand={onExpand}
+            stickyTop={laneTop}
+            laneHeight={laneHeight}
+            cardMaxWidth={cardMaxWidth}
             cardAspect={SITE.projects.cardAspect}
             cardRadius={SITE.projects.cardRadius}
             leftColWidth={SITE.projects.leftColWidth}
@@ -114,8 +133,10 @@ type StickyCardProps = {
   peek: number
   isActive: boolean
   onSelect: (id: string) => void
+  onExpand: (id: string) => void
   stickyTop: number
-  cardMaxWidth: number
+  laneHeight: string
+  cardMaxWidth: string
   cardAspect: string
   cardRadius: number
   leftColWidth: number
@@ -137,7 +158,9 @@ function StickyCard({
   peek,
   isActive,
   onSelect,
+  onExpand,
   stickyTop,
+  laneHeight,
   cardMaxWidth,
   cardAspect,
   cardRadius,
@@ -160,10 +183,11 @@ function StickyCard({
 
   return (
     <div
-      className="sticky flex h-[100svh] w-full items-center justify-center"
+      className="sticky flex w-full items-center justify-center"
       style={
         {
           top: stickyTop,
+          height: laneHeight,
           zIndex: index + 1,
           '--left-col': `${leftColWidth}px`,
           '--right-col': `${rightColWidth}px`,
@@ -220,7 +244,11 @@ function StickyCard({
               type="button"
               onMouseEnter={() => onSelect(project.id)}
               onFocus={() => onSelect(project.id)}
-              onClick={() => onSelect(project.id)}
+              onClick={() => {
+                onSelect(project.id)
+                onExpand(project.id)
+              }}
+              aria-label={`Open ${project.title}`}
               className={cn(
                 'group relative block w-full overflow-hidden text-left shadow-[0_28px_80px_-28px_rgba(18,20,26,0.7)]',
                 isActive ? 'ring-2 ring-accent/50 ring-offset-4 ring-offset-paper' : 'ring-1 ring-ink/10',
@@ -262,9 +290,13 @@ function StickyCard({
                 <div className="rounded-2xl border border-ink/15 bg-paper p-5 shadow-[0_20px_50px_-32px_rgba(18,20,26,0.45)]">
                   <p className="font-display text-2xl leading-tight text-ink">{project.title}</p>
                   <p className="mt-3 text-sm leading-relaxed text-ink/65">{project.summary}</p>
-                  <span className="mt-5 inline-block font-mono text-[11px] tracking-[0.18em] text-accent uppercase">
+                  <button
+                    type="button"
+                    onClick={() => onExpand(project.id)}
+                    className="mt-5 inline-block font-mono text-[11px] tracking-[0.18em] text-accent uppercase underline-offset-4 hover:underline"
+                  >
                     View more →
-                  </span>
+                  </button>
                 </div>
               </motion.div>
             )}

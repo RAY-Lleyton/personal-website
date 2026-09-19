@@ -73,13 +73,9 @@ export function SiteTopBar({
       >
         {/* A span, not the svg: the mark is line art, and an SVG's default
             `visiblePainted` hit-testing would only catch the drawn strokes. */}
-        <span
-          className={cn(
-            'group pointer-events-auto block h-full w-full text-paper/80',
-            'transition-colors hover:text-paper',
-          )}
-        >
-          <PersonalLogoMark className={cn('h-full w-full', POP_CLASS)} />
+        {/* No POP_CLASS here — the seal brightens on hover but doesn't grow. */}
+        <span className="pointer-events-auto block h-full w-full text-paper/80 transition-colors hover:text-paper">
+          <PersonalLogoMark className="h-full w-full" />
         </span>
       </div>
 
