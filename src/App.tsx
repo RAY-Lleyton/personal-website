@@ -12,7 +12,7 @@ import { ProjectDetail } from '@/components/ProjectDetail'
 import { ScrollCue } from '@/components/ScrollCue'
 import { ToggleSwitch } from '@/components/ToggleSwitch'
 import { useHeroMorph } from '@/hooks/useHeroMorph'
-import { ABOUT_BIO, ABOUT_HEADLINE, ABOUT_STATEMENT } from '@/lib/about'
+import { ABOUT_BIO, ABOUT_HEADLINE } from '@/lib/about'
 import { SITE } from '@/lib/site-config'
 import {
   ASSOCIATION_COLORS,
@@ -343,11 +343,7 @@ export default function App() {
           ) : (
             <div className="relative mx-auto grid min-h-[100svh] max-w-6xl items-center gap-8 px-6 py-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-4 lg:px-12 lg:pl-40">
               <div className="max-w-xl">
-                <p className="font-display text-4xl leading-[1.05] text-accent italic md:text-5xl lg:text-[4.2rem]">
-                  {ABOUT_STATEMENT}
-                </p>
-                <p className="mt-6 font-mono text-[11px] tracking-[0.22em] text-ink/45 uppercase">About</p>
-                <h2 className="mt-3 font-display text-4xl leading-[1.05] text-ink md:text-5xl lg:text-[3.4rem]">
+                <h2 className="font-display text-4xl leading-[1.05] text-accent md:text-5xl lg:text-[3.4rem]">
                   {ABOUT_HEADLINE}
                 </h2>
                 {ABOUT_BIO.map((paragraph, i) => (
@@ -368,14 +364,7 @@ export default function App() {
         </section>
 
         <section id={FEED_SECTION.id} className="mx-auto max-w-7xl px-6 py-16 lg:px-12 lg:pl-36">
-          <p className="font-mono text-[11px] tracking-[0.22em] text-ink/45 uppercase">
-            {FEED_SECTION.eyebrow}
-          </p>
-          <h2 className="mt-2 font-display text-4xl text-ink md:text-5xl">Selected work</h2>
-          <p className="mt-2 max-w-xl text-sm text-ink/60">
-            Filter with the dropdowns — or edit{' '}
-            <code className="font-mono text-ink/80">projects.csv</code>.
-          </p>
+          <h2 className="font-display text-4xl text-ink md:text-5xl">Selected work</h2>
 
           <div className="mt-8">
             {error && <p className="text-sm text-leadership">{error}</p>}
@@ -390,10 +379,7 @@ export default function App() {
             id={NON_TECH_SECTION.id}
             className="mx-auto max-w-7xl px-6 py-20 lg:px-12 lg:pl-36"
           >
-            <p className="font-mono text-[11px] tracking-[0.22em] text-ink/45 uppercase">
-              {NON_TECH_SECTION.eyebrow}
-            </p>
-            <h2 className="mt-2 font-display text-4xl text-ink md:text-5xl">Off the clock</h2>
+            <h2 className="font-display text-4xl text-ink md:text-5xl">Off the clock</h2>
             <div className="mt-8 flex min-h-[30vh] items-center justify-center rounded-3xl border border-dashed border-ink/15 bg-ink/[0.02] px-6 py-16 text-center">
               <div>
                 <p className="font-display text-3xl text-ink/80 md:text-4xl">Coming soon</p>
@@ -406,8 +392,7 @@ export default function App() {
         </section>
 
         <footer id="footer" className="border-t border-ink/10 px-6 py-24 lg:px-12 lg:pl-40">
-          <p className="font-mono text-[11px] tracking-[0.22em] text-ink/45 uppercase">Contact</p>
-          <h2 className="mt-3 font-display text-4xl text-ink md:text-5xl">Let&apos;s talk.</h2>
+          <h2 className="font-display text-4xl text-ink md:text-5xl">Let&apos;s talk.</h2>
           <div className="mt-8 flex flex-wrap gap-6 text-sm">
             <a className="underline-offset-4 hover:underline" href="mailto:lleytonelliott@gmail.com">
               lleytonelliott@gmail.com
@@ -424,8 +409,8 @@ export default function App() {
               Résumé
             </a>
           </div>
-          <p className="mt-16 max-w-lg font-mono text-[10px] leading-relaxed tracking-wide text-ink/40">
-            Components inspired by{' '}
+          <p className="mt-16 font-mono text-[10px] tracking-wide text-ink/40">
+            React components from{' '}
             <a
               className="underline underline-offset-2"
               href="https://reactbits.dev/"
@@ -443,7 +428,6 @@ export default function App() {
             >
               Skiper UI
             </a>
-            . Skiper attribution required for free-tier usage.
           </p>
         </footer>
       </main>

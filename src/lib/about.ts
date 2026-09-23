@@ -1,11 +1,8 @@
-/** Big statement that opens the About section — the "hero sentence" for it. */
-export const ABOUT_STATEMENT = 'I build robots, infrastructure, and community'
-
-export const ABOUT_HEADLINE = 'Engineer, teacher, aspiring roboticist.'
+export const ABOUT_HEADLINE = 'Engineer, creator, community builder'
 
 export const ABOUT_BIO = [
-  "Hello — I'm Lleyton, a UC Berkeley MEng student, an MIT alum, a lifelong learner, and an aspiring roboticist and entrepreneur. I want to engineer and scale solutions that help people, from assistive robots to food-waste redistribution to machines that automate dangerous and menial work.",
-  "Academically I'm into controls, robotic manipulation, HCI, and creative robotic hardware design. Outside of that: musician, rower, outdoors, sports, reading, and learning German.",
+  "Hello! I'm Lleyton, co-founder and CTO of RAY Robotics, an MIT and UC Berkeley alum, and a lifelong learner. My life goal is to use cutting-edge technology to build critical infrastructure better and more sustainably.",
+  "Academically I'm into controls, robotic manipulation, autonomous infrastructure, and creative robotic hardware design. Outside of that: musician, rower, outdoorsman, sports fan, avid reader, and German learner.",
 ] as const
 
 export const ABOUT_READER_HINT =
