@@ -183,7 +183,7 @@ function StickyCard({
 
   return (
     <div
-      className="sticky flex w-full items-center justify-center"
+      className="pointer-events-none sticky flex w-full items-center justify-center"
       style={
         {
           top: stickyTop,
@@ -204,7 +204,7 @@ function StickyCard({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 flex-col items-end gap-3"
+                className="pointer-events-auto absolute inset-x-0 top-1/2 flex -translate-y-1/2 flex-col items-end gap-3"
               >
                 {project.category.map((cat) => (
                   <span
@@ -250,7 +250,7 @@ function StickyCard({
               }}
               aria-label={`Open ${project.title}`}
               className={cn(
-                'group relative block w-full overflow-hidden text-left shadow-[0_28px_80px_-28px_rgba(18,20,26,0.7)]',
+                'group pointer-events-auto relative block w-full overflow-hidden text-left shadow-[0_28px_80px_-28px_rgba(18,20,26,0.7)]',
                 isActive ? 'ring-2 ring-accent/50 ring-offset-4 ring-offset-paper' : 'ring-1 ring-ink/10',
               )}
               style={{
@@ -285,7 +285,7 @@ function StickyCard({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute inset-x-0 top-1/2 -translate-y-1/2"
+                className="pointer-events-auto absolute inset-x-0 top-1/2 -translate-y-1/2"
               >
                 <div className="rounded-2xl border border-ink/15 bg-paper p-5 shadow-[0_20px_50px_-32px_rgba(18,20,26,0.45)]">
                   <p className="font-display text-2xl leading-tight text-ink">{project.title}</p>

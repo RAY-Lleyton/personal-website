@@ -610,6 +610,12 @@
 
 .pc-on-lanyard .pc-glare {
   opacity: calc(var(--lanyard-glare, 0.14) * 2);
+  /* Green glare to match the site — upstream's is lavender/blue. */
+  background-image: radial-gradient(
+    farthest-corner circle at var(--pointer-x) var(--pointer-y),
+    hsl(158, 42%, 80%) 12%,
+    hsla(165, 45%, 20%, 0.8) 90%
+  );
 }
 
 /* Bound the avatar instead of letting it fill the card (see SITE.lanyard). */

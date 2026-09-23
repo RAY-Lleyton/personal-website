@@ -463,6 +463,8 @@ function Band({
                   // pointer-driven tilt on top of it fights the swing
                   enableTilt={false}
                   behindGlowEnabled={false}
+                  // Site green instead of React Bits' stock purple/blue sheen.
+                  innerGradient="linear-gradient(145deg, rgba(30,125,93,0.55) 0%, rgba(110,211,170,0.30) 100%)"
                   name={PROFILE.name}
                   title={PROFILE.title}
                   handle={PROFILE.handle}
