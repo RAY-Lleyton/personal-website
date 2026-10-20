@@ -19,7 +19,7 @@ export type SocialLink = {
 
 export const SOCIAL_LINKS: SocialLink[] = [
   { label: 'RAY', href: 'https://rayrobotics.io', Icon: RayIcon },
-  { label: 'NOVA', href: 'https://robonova.ai', Icon: NovaIcon },
+  { label: 'NOVA', href: 'https://nova-robotics.org', Icon: NovaIcon },
   { label: 'LinkedIn', href: LINKEDIN_URL, Icon: LinkedinIcon },
   { label: 'Instagram', href: 'https://instagram.com/llllleytone', Icon: InstagramIcon },
   { label: 'X', href: 'https://x.com/LleytonElliott', Icon: XIcon },
